@@ -19,11 +19,15 @@ namespace FunWithIncludes.Tests.Services
             string unitResidentFilter,
             int? take)
         {
-            List<Package> packages = GetPackageInventory(communityCode, sortBy, sortDescending, viewIsDeleted,
-                                                         defconFilter, unitResidentFilter, take, true);
+            IDocumentSession currentSession = GetCurrentDocumentSession();
+            var query = CreateCurrentInventoryQuery(currentSession, communityCode, sortBy, sortDescending, viewIsDeleted,
+                                                    defconFilter, unitResidentFilter, take);
+
+            query.Include("CustomerIds");
+
+            var packages = query.ToList();
 
             var results = new List<PackageWithCustomers>();
-            IDocumentSession currentSession = GetCurrentDocumentSession();
 
             foreach (Package package in packages)
             {
@@ -40,29 +44,18 @@ namespace FunWithIncludes.Tests.Services
             }
             return results;
         }
+      
 
-
-        public List<Package> GetPackageInventory(
+        public IDocumentQuery<Package> CreateCurrentInventoryQuery(IDocumentSession session,
             string communityCode,
             string sortBy,
             bool sortDescending,
             bool viewIsDeleted,
             DefconFilter defconFilter,
             string unitResidentFilter,
-            int? take,
-            bool inculdeCustomers)
+            int? take)
         {
-            if (!take.HasValue)
-                take = 20;
-
-            IDocumentSession session = GetCurrentDocumentSession();
-
             IDocumentQuery<Package> query = session.Advanced.LuceneQuery<Package>("Package/CurrentInventory").Take(take.Value);
-
-            if (inculdeCustomers)
-            {
-                query.Include("CustomerIds");              
-            }
 
             query.WhereEquals("CommunityCode", communityCode);
             query.AndAlso().Not.WhereEquals("Status", PackageStatusCodes.Released);
@@ -85,10 +78,7 @@ namespace FunWithIncludes.Tests.Services
             {
                 query.AddOrder(sortBy, sortDescending);
             }
-
-            var results = query.ToList();
-
-            return results;
+            return query;
         }
 
         private static void DefConFilterQuery<T>(IDocumentQuery<T> query, DefconFilter defconFilter)

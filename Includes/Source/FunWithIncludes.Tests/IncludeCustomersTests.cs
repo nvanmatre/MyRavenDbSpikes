@@ -90,8 +90,10 @@ namespace FunWithIncludes.Tests
             
             var service = new NotificationService();
             var currentSession = AbstractRavenService.GetCurrentDocumentSession();
-
+            
             var packages = service.GetPackageInventory("101", string.Empty, false, false, null, null, 10);
+
+            Assert.AreEqual(1, currentSession.Advanced.NumberOfRequests);
 
             Assert.IsNotNull(packages);
             foreach (var package in packages)
@@ -99,19 +101,15 @@ namespace FunWithIncludes.Tests
                 Assert.IsTrue(package.Customers.Count > 0);
             }
         }
-       
 
         [TestInitialize]
         public void Setup()
         {         
             CreateHttpContext();
-           //InitEmeddedInMemoryDocumentStore();
-
             RavenDBConfiguration.Instance().Init();
-            RavenDBConfiguration.Instance().CreateIndex(typeof(Package_CurrentInventory).Assembly);
-
-            
         }
-    }
 
+
+
+    }
 }

@@ -14,7 +14,7 @@ using TransactionalStorage = Raven.Storage.Managed.TransactionalStorage;
 
 namespace FunWithIncludes.Tests
 {
-   
+
 
     public abstract class AbstractBaseTest
     {
@@ -43,7 +43,7 @@ namespace FunWithIncludes.Tests
         
 
 
-        public void InitEmeddedDocumentStore(string dataDirectory)
+        public void InitEmeddedDocumentStore(string dataDirectory,IDocumentQueryListener queryListener)
         {
             var mockRavenDBConfigurationInstance = MockRepository.GenerateStub<RavenDBConfiguration>();
 
@@ -54,6 +54,8 @@ namespace FunWithIncludes.Tests
                                                 {
                                                     DataDirectory = dataDirectory
                                                 };
+                        if (queryListener != null)
+                            documentStore.RegisterListener(queryListener);
 
                         return documentStore;
                     };
@@ -62,7 +64,7 @@ namespace FunWithIncludes.Tests
             mockRavenDBConfigurationInstance.Stub(x => x.GetDocumentStore()).Do(setDocumentStore);
             RavenDBConfiguration.Instance(mockRavenDBConfigurationInstance).Init();
 
-            RavenDBConfiguration.Instance().CreateIndex(typeof (Package_CurrentInventory).Assembly);
+            //RavenDBConfiguration.Instance().CreateIndex(typeof (Package_CurrentInventory).Assembly);
         }
 
         
